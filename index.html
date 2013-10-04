@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<style>
+.sqr{float:left; width:35px;height:35px;}
+.topLine{border-top: 3px solid black;}
+.leftLine{border-left: 3px solid black;}
+
+.clearfix{clear:both;}
+</style>
+
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.1.5/angular.min.js"></script>
+<script src="reversiCtrl.js"></script>
+</head>
+
+<body ng-app="">
+
+<div id="container" ng-controller="ReversiCtrl">
+	<div ng-repeat="row in othello">
+		<!-- Getting error "Error: Duplicates in a repeater are not allowed. Repeater: cell in row key: string:"?
+			Just add here: "track by $index" -->
+		<div ng-class="{sqr:true,topLine:$parent.$index != 0, leftLine:$index != 0}"
+			ng-repeat="cell in row track by $index"
+			ng-click="clickSquare($parent.$index, $index)">
+
+			<!-- This handlebar figures out the exact image URLs
+			 by using the conditional "?" operator. Some folks
+			 may consider this too much complexity to place in a
+			 view.  For an alternative approach, check out the
+			 "Tim" branch of this code out in github. -->
+			<img ng-src="{{m=othello[$parent.$index][$index];(m=='X'?'fb.png':(m=='O'?'g+.png':'1x1.png'))}}" />
+
+		</div>
+		<div class="clearfix"></div>
+	</div>
+	<input type="button" ng-click="resetBoard()" value="Reset" />
+</div>
+
+</body>
+</html>
+
