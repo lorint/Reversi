@@ -1,42 +1,100 @@
 <!DOCTYPE html>
 <html>
 <head>
+	<title>Othello</title>
+	<link rel="stylesheet" type="text/css" href="style.css">
 
-<style>
-.sqr{float:left; width:35px;height:35px;}
-.topLine{border-top: 3px solid black;}
-.leftLine{border-left: 3px solid black;}
-
-.clearfix{clear:both;}
-</style>
-
-<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.1.5/angular.min.js"></script>
-<script src="reversiCtrl.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.15/angular.min.js"></script>
+	<script src="https://cdn.firebase.com/js/client/1.0.17/firebase.js"></script>
+	<script src="https://cdn.firebase.com/libs/angularfire/0.7.1/angularfire.min.js"></script>
+	<script src="reversiCtrl.js"></script>
 </head>
 
-<body ng-app="">
+<body ng-app="ReversiApp">
 
-<div id="container" ng-controller="ReversiCtrl">
-	<div ng-repeat="row in othello">
-		<!-- Getting error "Error: Duplicates in a repeater are not allowed. Repeater: cell in row key: string:"?
-			Just add here: "track by $index" -->
-		<div ng-class="{sqr:true,topLine:$parent.$index != 0, leftLine:$index != 0}"
-			ng-repeat="cell in row track by $index"
-			ng-click="clickSquare($parent.$index, $index)">
+<div id="container" x-ng-controller="ReversiCtrl">
 
-			<!-- This handlebar figures out the exact image URLs
-			 by using the conditional "?" operator. Some folks
-			 may consider this too much complexity to place in a
-			 view.  For an alternative approach, check out the
-			 "Tim" branch of this code out in github. -->
-			<img ng-src="{{m=othello[$parent.$index][$index];(m=='X'?'fb.png':(m=='O'?'g+.png':'1x1.png'))}}" />
+<h3>Othello</h3>
 
-		</div>
-		<div class="clearfix"></div>
+<div x-ng-show="gameState=='E'">
+	You find yourself at a doorway.<br />
+	Please state your name, and enter.<br />
+	<input type="text" x-ng-model="name" /><span x-ng-if="nameAlreadyThere.length > 0">Sorry, the name {{nameAlreadyThere}} is already in use.</span><br />
+	<input type="button" value="Enter" x-ng-click="enterLobby();" />
+	<br />
+	<div x-ng-show="false">
+		You hear some insults being thrown around inside
 	</div>
-	<input type="button" ng-click="resetBoard()" value="Reset" />
+</div><!-- END of entry DIV -->
+
+<div x-ng-show="gameState[0]=='L'">
+	Lobby<br />
+	Welcome, {{name}}!
+
+	<div x-ng-show="(lobby | playerCount) <= 1">
+		You're the first person here.<br />
+		<br />
+		Patience is a virtue...
+	</div>
+
+	<div x-ng-show="(lobby | playerCount) > 1">
+		There <span ng-if="(lobby | playerCount) <= 2">is one other person</span><span ng-if="(lobby | 	playerCount) > 2">are {{ (lobby | playerCount) - 1}} other people</span> hanging out here.  Pick one to play Othello with!
+		<br />
+		<br />
+		Milling about:
+		<ul class="playerUL">
+			<li x-ng-repeat="(id,p) in lobby | isPlayerPlaying:false:playerId" x-ng-click="requestGame(p.id);" class="playerLI" x-ng-bind="p.name"></li>
+		</ul>
+		(Cick on a name to start a game!)
+		<br />
+		<br />
+
+		<div x-ng-show="lobby[playerId].game==' '">
+			Waiting to see if {{ lobby[lobby[playerId].opponent].name }} accepts your request to play...<br />
+			{{ wannaPlayTimer }}
+			<input type="button" x-ng-click="wannaPlayTimer = 0;" value="Cancel request" />
+			<br />
+		</div><!-- END of countdown timer DIV -->
+
+		<div x-ng-show="gameState=='LA'">
+			{{ lobby[lobby[playerId].opponent].name }} is asking to play with you! Do you accept?<br />
+			<input type="button" x-ng-click="acceptRequest();" value="YES" />
+			<input type="button" x-ng-click="rejectRequest();" value="NO" />
+			<br />
+		</div><!-- END of entry DIV -->
+
+		<br />
+		<br />
+		Seated and playing:
+		<ul class="playerUL">
+<!-- 			<li x-ng-repeat="(id,p) in lobby | isPlayerPlaying:true:playerId" x-ng-click="spectateGame(id);" class="playerLI">{{p.name}}</li> -->
+			<li x-ng-repeat="(id,g) in games" x-ng-click="spectateGame(id);" class="playerLI">{{lobby[g.player1].name}} vs {{lobby[g.player2].name}} ({{g.player1score}} - {{g.player2score}})</li>
+		</ul>
+	</div><!-- END of people here DIV -->
+</div><!-- END of lobby DIV -->
+
+<div x-ng-show="gameState=='G'">
+	<div x-ng-if="game.board == undefined">Looks like someone resigned...</div>
+	<div x-ng-if="game.board != undefined">
+		{{ lobby[game.player1].name }}: {{game.player1score}}<br />
+		{{ lobby[game.player2].name }}: {{game.player2score}}<br />
+		Next:<img ng-src="{{ ((game.playerTurn % 2) == 1)?'fb.png':'g+.png' }}" /> -
+		 {{lobby[ (game.playerTurn % 2) == 1 ? game.player2 : game.player1 ].name}}
+		<br />
+		<br />
+		<div x-ng-repeat="row in game.board">
+			<div x-ng-class="{sqr:true,topLine:$parent.$index != 0, leftLine:$index != 0, highlight: makeMove($parent.$index, $index)}"
+				x-ng-repeat="cell in row track by $index"
+				x-ng-click="clickSquare($parent.$index, $index)">
+				<img ng-src="{{ pic(game.board[$parent.$index][$index]) }}" />
+			</div>
+			<div class="clearfix"></div>
+		</div>
+	</div>
+	<input type="button" x-ng-click="resign()" value="Leave Game" />
+</div><!-- END of game DIV -->
+
 </div>
 
 </body>
 </html>
-

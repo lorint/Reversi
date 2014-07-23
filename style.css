@@ -1,0 +1,7 @@
+.sqr{float:left; width:35px;height:35px;}
+.topLine{border-top: 3px solid black;}
+.leftLine{border-left: 3px solid black;}
+.highlight{background-color: #808080;}
+.clearfix{clear:both;}
+.playerUL{list-style-type:none;}
+.playerLI{display: inline-block; margin: 3px; background-color: blue; color: white; cursor: pointer;}
